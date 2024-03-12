@@ -69,7 +69,7 @@ class ComposerStaticInit06655515d9c72aed3b45de067a147077
         ),
         'Admin\\Printful\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/src',
+            0 => __DIR__ . '/../..' . '/src/Printful',
         ),
     );
 

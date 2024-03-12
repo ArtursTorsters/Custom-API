@@ -1,7 +1,7 @@
 <?php
+namespace Admin\Printful;
 
 
-// Cache.php
 
 // Define the interface for the cache
 interface CacheInterface
@@ -16,8 +16,8 @@ interface CacheInterface
 
 
 
-
-class Cache implements CacheInterface
+// Cache.php
+class FileCache implements CacheInterface
 {
     // Array to hold cached data
     private $cacheData = [];
