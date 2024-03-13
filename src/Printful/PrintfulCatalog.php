@@ -21,71 +21,44 @@ class PrintfulCatalog
         // init Guzzle client
         $client = new Client();
         $productApi = "https://api.printful.com/products/{$id}";
-        
+
+        // Make a GET request to the API
         $response = $client->get($productApi);
+
         // Decode the JSON response
         $productData = json_decode($response->getBody(), true);
 
         // var_dump($productData);
 
 
-        // return the formatted data
+        // return the 
         return $this->formatData($productData, $id, $size);
     }
 
-
 // format the api data
-// Format product and size data into a structured array
 private function formatData(array $productData, int $id, string $size)
 {
     // Extract product and size information
     $product = $this->extractProduct($productData, $id);
     $sizeData = $this->extractSize($product, $size);
-    $sizeTableData = $this->extractSizeTable($productData);
 
-    // Combine product, size, and size table data
-    $formattedData = [
-        'product' => $product,
-        'size' => $sizeData,
-        'size_table' => $sizeTableData,
-    ];
+    // Check if product information is available
+    if (isset($product['id'], $product['title'], $product['description'])) {
+        // Combine product and size data
+        $formattedData = ['product' => $product, 'size' => $sizeData];
 
-    // Cache the formatted data for 5 minutes
-    $this->cacheData($formattedData, $id, $size);
+        // Cache the formatted data for 5 minutes
+        $this->cacheData($formattedData, $id, $size);
 
-    var_dump($formattedData);
-    return $formattedData;
-}
-
-private function extractSizeTable(array $productData)
-{
-    // Check if 'size_tables' key exists and is an array
-    if (isset($productData['result']['size_tables']) && is_array($productData['result']['size_tables'])) {
-        $sizeTable = $productData['result']['size_tables'][0]; // Assuming there's only one size table
-
-        // Extract relevant size table details
-        $extractedSizeTable = [
-            'type' => $sizeTable['type'] ?? null,
-            'unit' => $sizeTable['unit'] ?? null,
-            'description' => $sizeTable['description'] ?? null,
-            'measurements' => $sizeTable['measurements'] ?? [],
-        ];
-
-        // Print the size table information for debugging
-        print_r($extractedSizeTable);
-
-        return $extractedSizeTable;
+        return $formattedData;
     } else {
-        // Print a message indicating that the size table data is not available
-        echo "Size table data is not available in API response.";
+        // Handle the case when product information is not available
+        echo "Product information is not available for ID $id.";
 
-        // Print the entire API response for further debugging
-        print_r($productData);
+        // You might want to return or handle this case differently based on your requirements
+        return [];
     }
-
-    return [];
 }
-
 
 
 private function extractProduct(array $productData, int $id)
@@ -102,7 +75,7 @@ private function extractProduct(array $productData, int $id)
         ];
 
         // Print the product information for debugging
-        // print_r($extractedProduct);
+        print_r($extractedProduct);
 
         return $extractedProduct;
     } else {
