@@ -10,12 +10,12 @@ $cache = new FileCache(__DIR__ . '/src/Printful');
 // catalago with cache
 $printfulCatalog = new PrintfulCatalog($cache);
 
-// Specify the product ID and size
-$productId = 438;
+// request L & 438 id
+$id = 438;
 $size = 'L';
 
-// prod and size
-$result = $printfulCatalog->getProductAndSize($productId, $size);
+
+$result = $printfulCatalog->getProductAndSize($id, $size);
 
 
 if ($result !== null) {

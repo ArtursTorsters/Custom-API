@@ -1,5 +1,5 @@
 <?php
-
+namespace Admin\Printful;
 interface CacheInterface
 {
     /**

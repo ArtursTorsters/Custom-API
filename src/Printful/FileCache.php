@@ -1,22 +1,6 @@
 <?php
 namespace Admin\Printful;
 
-
-
-// Define the interface for the cache
-interface CacheInterface
-{
-    // retrive from cache
-    public function get(string $key);
-
-    // store data in cache with key and duration
-    public function set(string $key, $value, int $duration);
-}
-
-
-
-
-// Cache.php
 class FileCache implements CacheInterface
 {
     // Array to hold cached data
