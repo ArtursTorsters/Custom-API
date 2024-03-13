@@ -15,139 +15,146 @@ class PrintfulCatalog
         // Assign the provided cache object to the class property
         $this->cache = $cache;
     }
-    // Fetch product and size data from the Printful API
+
     private function fetchDataFromApi(int $id, string $size)
     {
         // init Guzzle client
         $client = new Client();
         $productApi = "https://api.printful.com/products/{$id}";
-
-        // Make a GET request to the API
-        $response = $client->get($productApi);
-
-        // Decode the JSON response
-        $productData = json_decode($response->getBody(), true);
-
-        // var_dump($productData);
-
-
-        // return the 
-        return $this->formatData($productData, $id, $size);
-    }
-
-// format the api data
-private function formatData(array $productData, int $id, string $size)
-{
-    // Extract product and size information
-    $product = $this->extractProduct($productData, $id);
-    $sizeData = $this->extractSize($product, $size);
-
-    // Check if product information is available
-    if (isset($product['id'], $product['title'], $product['description'])) {
-        // Combine product and size data
-        $formattedData = ['product' => $product, 'size' => $sizeData];
-
-        // Cache the formatted data for 5 minutes
-        $this->cacheData($formattedData, $id, $size);
-
-        return $formattedData;
-    } else {
-        // Handle the case when product information is not available
-        echo "Product information is not available for ID $id.";
-
-        // You might want to return or handle this case differently based on your requirements
-        return [];
-    }
-}
-
-
-private function extractProduct(array $productData, int $id)
-{
-    // Check if the 'catalog_product_id' key exists
-    if (isset($productData['result']['product']['id']) && $productData['result']['product']['id'] === $id) {
-        $product = $productData['result']['product'];
-
-        // Extract relevant product details
-        $extractedProduct = [
-            'id' => $product['id'] ?? null,
-            'title' => $product['title'] ?? null,
-            'description' => $product['description'] ?? null,
-        ];
-
-        // Print the product information for debugging
-        print_r($extractedProduct);
-
-        return $extractedProduct;
-    } else {
-        // Print a message indicating that the product was not found
-        echo "Product information is not available for ID $id.";
-
-        // Print the entire API response for further debugging
-        print_r($productData);
-    }
-
-    return [];
-}
-
-
-
+        $sizeTableApi = "https://api.printful.com/products/{$id}/sizes";
     
- 
-// Extract size information from the product data
-private function extractSize(array $product, string $size)
-{
-    // Check if 'size_tables' key exists and is an array
-    $sizeTables = $product["size_tables"] ?? [];
+        // Make a GET request to the API for product data
+        $productResponse = $client->get($productApi);
+    
+        // Make a GET request to the API for size table data
+        $sizeTableResponse = $client->get($sizeTableApi);
+    
+        // Decode the JSON responses
+        $productData = json_decode($productResponse->getBody(), true);
+        $sizeTableData = json_decode($sizeTableResponse->getBody(), true);
+    
+        
+    
+        // return the formatted data
+        return $this->formatData($productData, $sizeTableData, $id, $size);
+    }
+    
 
+    // Format the API data
+    private function formatData(array $productData, array $sizeTableData, int $id, string $size)
+    {
+        // Extract product and size information
+        $product = $this->extractProduct($productData, $id);
 
-  
-    // print_r($sizeTables);
+        // Extract size table information
+        $sizeTable = $this->extractSizeTable($sizeTableData, $size);
 
-    // Loop through each 'size_tables' entry
-    foreach ($sizeTables as $sizeTable) {
-        // Check if 'sizes' key exists within the current 'size_table' entry
-        $sizes = $sizeTable['sizes'] ?? [];
+        // Check if product information is available
+        if (isset($product['id'], $product['title'], $product['description'])) {
+            // Combine product, size, and size table data
+            $formattedData = ['product' => $product, 'size' => $size, 'size_table' => $sizeTable];
 
-  
-        // Loop through each size in the 'sizes' array
-        foreach ($sizes as $sizeData) {
-            // Check if 'size' key exists in the current $sizeData
-            if (isset($sizeData['size']) && $sizeData['size'] === $size) {
-                return [
-                    'type' => $sizeData['type'] ?? null,
-                    'unit' => $sizeData['unit'] ?? null,
-                    'description' => $sizeData['description'] ?? null,
-                    'measurements' => [
-                        'type_label' => $sizeData['measurements']['type_label'] ?? null,
-                        'value' => $sizeData['measurements']['values'][$size] ?? null,
-                    ],
-                ];
-            }
+            // Cache the formatted data for 5 minutes
+            $this->cacheData($formattedData, $id, $size);
+
+            return $formattedData;
+        } else {
+            // Handle the case when product information is not available
+            echo "Product information is not available for ID $id.";
+
+            // You might want to return or handle this case differently based on your requirements
+            return [];
+        }
+    }
+
+    // Extract product information from the product data
+    private function extractProduct(array $productData, int $id)
+    {
+        // Check if the product key exists
+        if (isset($productData['result']['product']['id']) && $productData['result']['product']['id'] === $id) {
+            $product = $productData['result']['product'];
+
+            // Extract relevant product details
+            return [
+                'id' => $product['id'] ?? null,
+                'title' => $product['title'] ?? null,
+                'description' => $product['description'] ?? null,
+            ];
         }
 
+        return [];
     }
 
+ 
+
+
+
+    private function extractSizeTable(array $sizeTableData, string $size)
+{
+    $sizeTables = $sizeTableData['result']['size_tables'] ?? [];
+    
+    foreach ($sizeTables as $sizeTable) {
+        return [
+            'type' => $sizeTable['type'],
+            'unit' => $sizeTable['unit'],
+            'description' => $sizeTable['description'],
+            'measurements' => $this->extractSizeTableMeasurements($sizeTable, $size),
+        ];
+    }
+    
     return [];
 }
 
+private function extractSizeTableMeasurements(array $sizeTable, string $size)
+{
+    $measurements = [];
 
+    foreach ($sizeTable['measurements'] as $measurement) {
+        // Skip empty arrays
+        if (empty($measurement)) {
+            continue;
+        }
 
+        // Check if the "size" key exists
+        if (isset($measurement['size']) && $measurement['size'] === $size) {
+            // Extract the requested size value based on the type_label
+            $typeLabel = $measurement['type_label'];
+            $value = '';
 
+            foreach ($measurement['values'] as $sizeData) {
+                if ($sizeData['size'] === $size) {
+                    $value = $sizeData['value'];
+                    break;
+                }
+            }
 
-    // Cache the formatted data for 5 minutes
-    private function cacheData(array $formattedData, int $id, string $size)
-    {
-        // Generate a unique cache key
-        $cacheKey = "product_{$id}_size_{$size}";
-
-        // Store the formatted data in the cache
-        $this->cache->set($cacheKey, $formattedData, 300);
+            $measurements[] = [
+                'type_label' => $typeLabel,
+                'value' => $value,
+            ];
+        }
     }
 
+    return $measurements;
+}
 
 
+private function cacheData(array $formattedData, int $id, string $size)
+{
+    // Generate a unique cache key
+    $cacheKey = "product_{$id}_size_{$size}";
 
-    // Retrieve product and size information
+    // Store the formatted data in the cache
+    $this->cache->set($cacheKey, $formattedData, 300);
+
+    // Debugging output
+    echo "Cached data for key: $cacheKey\n";
+    echo "Cached data:\n";
+    var_dump($formattedData);
+}
+
+
+    // Retrieve product, size, and size table information
     public function getProductAndSize(int $id, string $size)
     {
         // Generate a unique cache key based on the product ID and size
@@ -166,7 +173,7 @@ private function extractSize(array $product, string $size)
 
         // Cache the data for 5 minutes
         $this->cache->set($cacheKey, $apiData, 300);
-        // var_dump($apiData);
+
         return $apiData;
     }
 }

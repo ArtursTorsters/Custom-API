@@ -24,7 +24,6 @@ class FileCache implements CacheInterface
             }
         }
 
-        // Return null if the key does not exist or has expired
         return null;
     }
 
