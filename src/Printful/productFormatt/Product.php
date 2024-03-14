@@ -14,18 +14,15 @@ class Product
     }
     public static function formatData(array $productData, array $sizeTableData, int $id, string $size)
     {
-        // Extract product and size information
+        // product and size table
         $product = self::extractProduct($productData, $id);
 
-        // Extract size table information
+        // extract size_table
         $sizeTable = self::extractSizeTable($sizeTableData, $size);
 
-        // Check if product information is available
+        // if product data 
         if (isset($product['id'], $product['title'], $product['description'])) {
-            // Combine product, size, and size table data
             $formattedData = ['product' => $product, 'size' => $size, 'size_table' => $sizeTable];
-
-            // Cache the formatted data for 5 minutes using the cacheData method from PrintfulCatalog
             self::$printfulCatalog->cacheData($formattedData, $id, $size);
 
             return $formattedData;
@@ -34,11 +31,10 @@ class Product
 
     public static function extractProduct(array $productData, int $id)
     {
-        // Check if the product key exists
+        // if prod key exists
         if (isset($productData['result']['product']['id'])) {
             $product = $productData['result']['product'];
 
-            // Extract relevant product details
             return [
                 'id' => $product['id'] ?? null,
                 'title' => $product['title'] ?? null,
@@ -67,12 +63,12 @@ class Product
     {
         $measurements = [];
 
-        // Get the first measurement entry (assuming there's only one)
+        // only one measurment
         $measurement = $sizeTable['measurements'][0];
 
         if ($measurement !== null && isset($measurement['values']) && is_array($measurement['values'])) {
             foreach ($measurement['values'] as $sizeData) {
-                // Check if the size matches the requested size
+                // if matches L
                 if ($sizeData['size'] === $size) {
                     $measurements[] = [
                         'type_label' => $measurement['type_label'] ?? null,

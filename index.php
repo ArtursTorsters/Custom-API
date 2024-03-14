@@ -10,7 +10,7 @@ $printfulCatalog = new PrintfulCatalog($cache);
 
 Product::setPrintfulCatalog($printfulCatalog);
 
-// specific prod
+
 $id = 438;
 $size = 'L';
 

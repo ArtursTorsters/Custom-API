@@ -4,7 +4,6 @@
 namespace Admin\Printful\api;
 
 use GuzzleHttp\Client;
-
 class Api
 {
     public static function fetchDataFromApi(int $id)

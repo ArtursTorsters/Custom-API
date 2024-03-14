@@ -11,7 +11,7 @@ class FileCache implements CacheInterface
         $this->cacheDirectory = $cacheDirectory;
     }
 
-//    getting value from cache
+// getting value from cache
     public function get(string $key)
     {
         $filename = $this->getCacheFilename($key);
@@ -24,7 +24,7 @@ class FileCache implements CacheInterface
         return null;
     }
 
-//   store value in cache
+//store value in cache
     public function set(string $key, $value, int $duration)
     {
         $filename = $this->getCacheFilename($key);
@@ -35,7 +35,7 @@ class FileCache implements CacheInterface
         file_put_contents($filename, serialize($data));
     }
 
-//    generate file on key
+//cached fileName based on the key
     private function getCacheFilename(string $key)
     {
         return $this->cacheDirectory . '/cacheData/' . md5($key);
