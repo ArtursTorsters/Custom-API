@@ -7,13 +7,9 @@ use Admin\Printful\productFormatt\Product;
 
 require 'vendor/autoload.php';
 
-/**
- * PrintfulCatalog class manages the retrieval, formatting, and caching of product data from the Printful API.
- */
 class PrintfulCatalog
 {
-    /** @var CacheInterface The cache instance used for caching data */
-    private $cache;
+    private $cache; // Cache instance
 
     /**
      * Constructor for PrintfulCatalog class.
@@ -27,64 +23,46 @@ class PrintfulCatalog
 
     /**
      * Fetches data from the Printful API.
-     *
-     * @param int $id The ID of the product.
-     * @param string $size The size of the product.
-     * @return array The fetched data from the API.
      */
-    private function fetchDataFromApi(int $id, string $size)
+    private function fetchDataFromApi(int $id, string $size): array
     {
         return Api::fetchDataFromApi($id, $size);
     }
 
     /**
      * Formats the product data retrieved from the API.
-     *
-     * @param array $productData The raw product data from the API.
-     * @param array $sizeTableData The raw size table data from the API.
-     * @param int $id The ID of the product.
-     * @param string $size The size of the product.
-     * @return array The formatted product data.
      */
-    private function formatData(array $productData, array $sizeTableData, int $id, string $size)
+    private function formatData(array $productData, array $sizeTableData, int $id, string $size): array
     {
         return Product::formatData($productData, $sizeTableData, $id, $size);
     }
 
     /**
      * Caches the formatted product data.
-     *
-     * @param array $formattedData The formatted product data to be cached.
-     * @param int $id The ID of the product.
-     * @param string $size The size of the product.
-     * @return void
+     
      */
-    public function cacheData(array $formattedData, int $id, string $size)
+    public function cacheData(array $formattedData, int $id, string $size): void
     {
-        $cacheKey = "product_{$id}_size_{$size}";
-        $this->cache->set($cacheKey, $formattedData, 300);
+        // Cache the data with a key based on product ID and size, expires in 5 minutes (300 seconds)
+        $this->cache->set("product_{$id}_size_{$size}", $formattedData, 300);
     }
 
     /**
      * Retrieves the product and size information.
      * If the data is already cached, it returns the cached data. Otherwise, it fetches, formats, and caches the data.
      *
-     * @param int $id The ID of the product.
-     * @param string $size The size of the product.
-     * @return array The product and size information.
      */
-    public function getProductAndSize(int $id, string $size)
+    public function getProductAndSize(int $id, string $size): array
     {
         $cacheKey = "product_{$id}_size_{$size}";
-        $cachedData = $this->cache->get($cacheKey);
-
-        if ($cachedData !== null) {
-            return $cachedData;
+        // Check if data is cached
+        if ($cachedData = $this->cache->get($cacheKey)) {
+            return $cachedData; // Return cached data if available
         }
 
-        $apiData = $this->fetchDataFromApi($id, $size);
-        $formattedData = $this->formatData($apiData[0], $apiData[1], $id, $size);
-
+        // If data is not cached, fetch from API, format, and cache
+        [$productData, $sizeTableData] = $this->fetchDataFromApi($id, $size);
+        $formattedData = $this->formatData($productData, $sizeTableData, $id, $size);
         $this->cacheData($formattedData, $id, $size);
 
         return $formattedData;

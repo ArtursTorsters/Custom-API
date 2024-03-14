@@ -5,23 +5,18 @@ use Admin\Printful\FileCache;
 use Admin\Printful\PrintfulCatalog;
 use Admin\Printful\productFormatt\Product;
 
-// Instantiate FileCache with cache directory
 $cache = new FileCache(__DIR__ . '/src/Printful');
-
-// Instantiate PrintfulCatalog with the cache instance
 $printfulCatalog = new PrintfulCatalog($cache);
 
-// Set the PrintfulCatalog instance in the Product class
 Product::setPrintfulCatalog($printfulCatalog);
 
-// Define the ID and size you want to request
+
 $id = 438;
 $size = 'L';
 
-// Call getProductAndSize method to fetch product data
+// call getProductAndSize
 $result = $printfulCatalog->getProductAndSize($id, $size);
 
-// Display the retrieved product and size information
 if ($result !== null) {
     echo "Product ID: {$result['product']['id']}\n";
     echo "Product Title: {$result['product']['title']}\n";
