@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'admin/printful',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => NULL,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => 'fef7782681bdbf089bad516fb728da4f9cc4c625',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'admin/printful' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => NULL,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'fef7782681bdbf089bad516fb728da4f9cc4c625',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -128,9 +128,9 @@
             'dev_requirement' => true,
         ),
         'phpunit/phpunit' => array(
-            'pretty_version' => '11.0.5',
-            'version' => '11.0.5.0',
-            'reference' => 'da2de3900beab025398ba37705b0f5ecafb3e1ab',
+            'pretty_version' => '11.0.6',
+            'version' => '11.0.6.0',
+            'reference' => '6af32d7938fc366f86e49a5f5ebb314018d1b1fb',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpunit/phpunit',
             'aliases' => array(),
