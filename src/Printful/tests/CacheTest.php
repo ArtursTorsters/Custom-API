@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 use Admin\Printful\FileCache;
 
-// set and get method test
+// set and get method test if works
 
 class FileCacheTest extends TestCase
 {

@@ -5,17 +5,13 @@ class FileCache implements CacheInterface
 {
     private $cacheDirectory;
 
-    /**
-     * Constructor to set the cache directory.
-     */
+//   cache directory
     public function __construct(string $cacheDirectory)
     {
         $this->cacheDirectory = $cacheDirectory;
     }
 
-    /**
-     * Retrieve a value from the cache.
-     */
+//    getting value from cache
     public function get(string $key)
     {
         $filename = $this->getCacheFilename($key);
@@ -28,9 +24,7 @@ class FileCache implements CacheInterface
         return null;
     }
 
-    /**
-     * Store a value in the cache.
-     */
+//   store value in cache
     public function set(string $key, $value, int $duration)
     {
         $filename = $this->getCacheFilename($key);
@@ -41,9 +35,7 @@ class FileCache implements CacheInterface
         file_put_contents($filename, serialize($data));
     }
 
-    /**
-     * Get the cache filename for a given key.
-     */
+//    generate file on key
     private function getCacheFilename(string $key)
     {
         return $this->cacheDirectory . '/cache/' . md5($key);
