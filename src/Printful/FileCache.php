@@ -38,6 +38,6 @@ class FileCache implements CacheInterface
 //    generate file on key
     private function getCacheFilename(string $key)
     {
-        return $this->cacheDirectory . '/cache/' . md5($key);
+        return $this->cacheDirectory . '/cacheData/' . md5($key);
     }
 }

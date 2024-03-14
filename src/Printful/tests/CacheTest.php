@@ -11,7 +11,6 @@ class FileCacheTest extends TestCase
     {
         $cache = new FileCache('/cache/');
         $result = $cache->get('test_key');
-
         $this->assertNull($result);
     }
 
