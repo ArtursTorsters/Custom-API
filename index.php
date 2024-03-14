@@ -3,28 +3,35 @@ require 'vendor/autoload.php';
 
 use Admin\Printful\FileCache;
 use Admin\Printful\PrintfulCatalog;
+use Admin\Printful\productFormatt\Product;
 
-// the file cache to $cache
+// Instantiate FileCache with cache directory
 $cache = new FileCache(__DIR__ . '/src/Printful');
 
-// catalog with cache
+// Instantiate PrintfulCatalog with the cache instance
 $printfulCatalog = new PrintfulCatalog($cache);
 
-// request L & 438 id
+// Set the PrintfulCatalog instance in the Product class
+Product::setPrintfulCatalog($printfulCatalog);
+
+// Define the ID and size you want to request
 $id = 438;
 $size = 'L';
 
+// Call getProductAndSize method to fetch product data
 $result = $printfulCatalog->getProductAndSize($id, $size);
-// prod and size table
+
+// Display the retrieved product and size information
 if ($result !== null) {
     echo "Product ID: {$result['product']['id']}\n";
     echo "Product Title: {$result['product']['title']}\n";
     echo "Product Description: {$result['product']['description']}\n";
     echo "Type: {$result['size_table']['type']}\n";
     echo "Unit: {$result['size_table']['unit']}\n";
-    echo "Description: {$result['size_table']['description']}\n";
-    echo "\nMeasurements:\n";
+    $text = "Description: {$result['size_table']['description']}\n";
+    echo strip_tags($text, '<script>');    echo "Measurements:\n";
     foreach ($result['size_table']['measurements'] as $measurement) {
-        echo "Type Label: {$measurement['type_label']} and Value: {$measurement['value']}\n";
+        echo "Type Label: {$measurement['type_label']}\n";
+        echo "Value: {$measurement['value']}\n";
     }
 }

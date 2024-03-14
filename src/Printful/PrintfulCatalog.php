@@ -2,157 +2,91 @@
 
 namespace Admin\Printful;
 
+use Admin\Printful\api\Api;
+use Admin\Printful\productFormatt\Product;
+
 require 'vendor/autoload.php';
 
-use GuzzleHttp\Client;
-
+/**
+ * PrintfulCatalog class manages the retrieval, formatting, and caching of product data from the Printful API.
+ */
 class PrintfulCatalog
 {
+    /** @var CacheInterface The cache instance used for caching data */
     private $cache;
 
+    /**
+     * Constructor for PrintfulCatalog class.
+     *
+     * @param CacheInterface $cache The cache instance to be used for caching data.
+     */
     public function __construct(CacheInterface $cache)
     {
-        // Assign the provided cache object to the class property
         $this->cache = $cache;
     }
 
+    /**
+     * Fetches data from the Printful API.
+     *
+     * @param int $id The ID of the product.
+     * @param string $size The size of the product.
+     * @return array The fetched data from the API.
+     */
     private function fetchDataFromApi(int $id, string $size)
     {
-        // init Guzzle client
-        $client = new Client();
-        $productApi = "https://api.printful.com/products/{$id}";
-        $sizeTableApi = "https://api.printful.com/products/{$id}/sizes";
-
-        // Make a GET request to the API for product data
-        $productResponse = $client->get($productApi);
-
-        // Make a GET request to the API for size table data
-        $sizeTableResponse = $client->get($sizeTableApi);
-
-        // Decode the JSON responses
-        $productData = json_decode($productResponse->getBody(), true);
-        $sizeTableData = json_decode($sizeTableResponse->getBody(), true);
-
-
-
-        // return the formatted data
-        return $this->formatData($productData, $sizeTableData, $id, $size);
+        return Api::fetchDataFromApi($id, $size);
     }
 
-
-    // Format the API data
+    /**
+     * Formats the product data retrieved from the API.
+     *
+     * @param array $productData The raw product data from the API.
+     * @param array $sizeTableData The raw size table data from the API.
+     * @param int $id The ID of the product.
+     * @param string $size The size of the product.
+     * @return array The formatted product data.
+     */
     private function formatData(array $productData, array $sizeTableData, int $id, string $size)
     {
-        // Extract product and size information
-        $product = $this->extractProduct($productData, $id);
-
-        // Extract size table information
-        $sizeTable = $this->extractSizeTable($sizeTableData, $size);
-
-        // Check if product information is available
-        if (isset($product['id'], $product['title'], $product['description'])) {
-            // Combine product, size, and size table data
-            $formattedData = ['product' => $product, 'size' => $size, 'size_table' => $sizeTable];
-
-            // Cache the formatted data for 5 minutes
-            $this->cacheData($formattedData, $id, $size);
-
-            return $formattedData;
-        } else {
-            // Handle the case when product information is not available
-            echo "Product information is not available for ID $id.";
-
-            // You might want to return or handle this case differently based on your requirements
-            return [];
-        }
+        return Product::formatData($productData, $sizeTableData, $id, $size);
     }
 
-    // single product
-    private function extractProduct(array $productData, int $id)
+    /**
+     * Caches the formatted product data.
+     *
+     * @param array $formattedData The formatted product data to be cached.
+     * @param int $id The ID of the product.
+     * @param string $size The size of the product.
+     * @return void
+     */
+    public function cacheData(array $formattedData, int $id, string $size)
     {
-        // Check if the product key exists
-        if (isset($productData['result']['product']['id'])) {
-            $product = $productData['result']['product'];
-
-            // Extract relevant product details
-            return [
-                'id' => $product['id'] ?? null,
-                'title' => $product['title'] ?? null,
-                'description' => $product['description'] ?? null,
-            ];
-        }
-        return null;
-    }
-
-
-
-
-
-    // multi sizes for
-    private function extractSizeTable(array $sizeTableData, string $size)
-    {
-        $sizeTables = $sizeTableData['result']['size_tables'];
-        foreach ($sizeTables as $sizeTable) {
-            return [
-                'type' => $sizeTable['type'],
-                'unit' => $sizeTable['unit'],
-                'description' => $sizeTable['description'],
-                'measurements' => $this->extractSizeTableMeasurements($sizeTable, $size),
-            ];
-        }
-        return null;
-    }
-
-    private function extractSizeTableMeasurements(array $sizeTable, string $size)
-    {
-        $measurements = [];
-
-        foreach ($sizeTable['measurements'] as $measurement) {
-   // Extract the requested size value based on the type_label
-   $typeLabel = $measurement['type_label'];
-   $value = '';
-
-
-   $measurements[] = [
-       'type_label' => $typeLabel,
-       'value' => $value,
-   ];
-        }
-
-        return $measurements;
-    }
-
-
-    private function cacheData(array $formattedData, int $id, string $size)
-    {
-        // Generate a unique cache key
         $cacheKey = "product_{$id}_size_{$size}";
-
-        // Store the formatted data in the cache
         $this->cache->set($cacheKey, $formattedData, 300);
     }
 
-
-    // Retrieve product, size, and size table information
+    /**
+     * Retrieves the product and size information.
+     * If the data is already cached, it returns the cached data. Otherwise, it fetches, formats, and caches the data.
+     *
+     * @param int $id The ID of the product.
+     * @param string $size The size of the product.
+     * @return array The product and size information.
+     */
     public function getProductAndSize(int $id, string $size)
     {
-        // Generate a unique cache key based on the product ID and size
         $cacheKey = "product_{$id}_size_{$size}";
-
-        // Check if the data is in the cache
         $cachedData = $this->cache->get($cacheKey);
 
         if ($cachedData !== null) {
-            // If data is in the cache, return it
             return $cachedData;
         }
 
-        // Fetch data from API if not in the cache
         $apiData = $this->fetchDataFromApi($id, $size);
+        $formattedData = $this->formatData($apiData[0], $apiData[1], $id, $size);
 
-        // Cache the data for 5 minutes
-        $this->cache->set($cacheKey, $apiData, 300);
+        $this->cacheData($formattedData, $id, $size);
 
-        return $apiData;
+        return $formattedData;
     }
 }

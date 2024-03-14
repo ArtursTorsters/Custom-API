@@ -1,12 +1,22 @@
 <?php
 namespace Admin\Printful;
 
+
 class FileCache implements CacheInterface
 {
-    // Array to hold cached data
-    private $cacheData = [];
 
-    // Retrieve a value from the cache
+
+    /**
+     * Retrieve stored item.
+     * Returns the same type as it was stored in.
+     * Returns null if entry has expired.
+     *
+     * @param string $key
+     * @return mixed|null
+     */
+
+
+    private $cacheData = [];
     public function get(string $key)
     {
         // Check if the key exists in the cache
@@ -18,16 +28,20 @@ class FileCache implements CacheInterface
             if ($cachedItem['expires_at'] > time()) {
                 // Return the cached value
                 return $cachedItem['value'];
-            } else {
-                // Remove the expired item from the cache
-                unset($this->cacheData[$key]);
             }
         }
 
         return null;
     }
-
-    // Store a value in the cache
+    /**
+     * Store a mixed type value in cache for a certain amount of seconds.
+     * Supported values should be scalar types and arrays.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @param int $duration Duration in seconds
+     * @return mixed
+     */
     public function set(string $key, $value, int $duration)
     {
         // Calculate the expiration time based on the duration
