@@ -22,23 +22,23 @@ class PrintfulCatalog
         $client = new Client();
         $productApi = "https://api.printful.com/products/{$id}";
         $sizeTableApi = "https://api.printful.com/products/{$id}/sizes";
-    
+
         // Make a GET request to the API for product data
         $productResponse = $client->get($productApi);
-    
+
         // Make a GET request to the API for size table data
         $sizeTableResponse = $client->get($sizeTableApi);
-    
+
         // Decode the JSON responses
         $productData = json_decode($productResponse->getBody(), true);
         $sizeTableData = json_decode($sizeTableResponse->getBody(), true);
-    
-        
-    
+
+
+
         // return the formatted data
         return $this->formatData($productData, $sizeTableData, $id, $size);
     }
-    
+
 
     // Format the API data
     private function formatData(array $productData, array $sizeTableData, int $id, string $size)
@@ -67,11 +67,11 @@ class PrintfulCatalog
         }
     }
 
-    // Extract product information from the product data
+    // single product
     private function extractProduct(array $productData, int $id)
     {
         // Check if the product key exists
-        if (isset($productData['result']['product']['id']) && $productData['result']['product']['id'] === $id) {
+        if (isset($productData['result']['product']['id'])) {
             $product = $productData['result']['product'];
 
             // Extract relevant product details
@@ -81,77 +81,56 @@ class PrintfulCatalog
                 'description' => $product['description'] ?? null,
             ];
         }
-
-        return [];
+        return null;
     }
 
- 
 
 
 
+
+    // multi sizes for
     private function extractSizeTable(array $sizeTableData, string $size)
-{
-    $sizeTables = $sizeTableData['result']['size_tables'] ?? [];
-    
-    foreach ($sizeTables as $sizeTable) {
-        return [
-            'type' => $sizeTable['type'],
-            'unit' => $sizeTable['unit'],
-            'description' => $sizeTable['description'],
-            'measurements' => $this->extractSizeTableMeasurements($sizeTable, $size),
-        ];
-    }
-    
-    return [];
-}
-
-private function extractSizeTableMeasurements(array $sizeTable, string $size)
-{
-    $measurements = [];
-
-    foreach ($sizeTable['measurements'] as $measurement) {
-        // Skip empty arrays
-        if (empty($measurement)) {
-            continue;
-        }
-
-        // Check if the "size" key exists
-        if (isset($measurement['size']) && $measurement['size'] === $size) {
-            // Extract the requested size value based on the type_label
-            $typeLabel = $measurement['type_label'];
-            $value = '';
-
-            foreach ($measurement['values'] as $sizeData) {
-                if ($sizeData['size'] === $size) {
-                    $value = $sizeData['value'];
-                    break;
-                }
-            }
-
-            $measurements[] = [
-                'type_label' => $typeLabel,
-                'value' => $value,
+    {
+        $sizeTables = $sizeTableData['result']['size_tables'];
+        foreach ($sizeTables as $sizeTable) {
+            return [
+                'type' => $sizeTable['type'],
+                'unit' => $sizeTable['unit'],
+                'description' => $sizeTable['description'],
+                'measurements' => $this->extractSizeTableMeasurements($sizeTable, $size),
             ];
         }
+        return null;
     }
 
-    return $measurements;
-}
+    private function extractSizeTableMeasurements(array $sizeTable, string $size)
+    {
+        $measurements = [];
+
+        foreach ($sizeTable['measurements'] as $measurement) {
+   // Extract the requested size value based on the type_label
+   $typeLabel = $measurement['type_label'];
+   $value = '';
 
 
-private function cacheData(array $formattedData, int $id, string $size)
-{
-    // Generate a unique cache key
-    $cacheKey = "product_{$id}_size_{$size}";
+   $measurements[] = [
+       'type_label' => $typeLabel,
+       'value' => $value,
+   ];
+        }
 
-    // Store the formatted data in the cache
-    $this->cache->set($cacheKey, $formattedData, 300);
+        return $measurements;
+    }
 
-    // Debugging output
-    echo "Cached data for key: $cacheKey\n";
-    echo "Cached data:\n";
-    var_dump($formattedData);
-}
+
+    private function cacheData(array $formattedData, int $id, string $size)
+    {
+        // Generate a unique cache key
+        $cacheKey = "product_{$id}_size_{$size}";
+
+        // Store the formatted data in the cache
+        $this->cache->set($cacheKey, $formattedData, 300);
+    }
 
 
     // Retrieve product, size, and size table information
