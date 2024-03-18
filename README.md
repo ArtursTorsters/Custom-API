@@ -1,4 +1,4 @@
-# Printful API Integration
+# API Integration
 
 
     Persistent File Caching: Implemented a file caching mechanism to store API responses for faster retrieval.
